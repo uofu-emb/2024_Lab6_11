@@ -33,6 +33,8 @@ void run_analyzer(TaskFunction_t pri_thread_entry,
 
                     xTaskCreate(sec_thread_entry, "secondaryTask",configMINIMAL_STACK_SIZE,secondaryName,sec_priority,&secondaryTask);
 
+                    vTaskDelay(TEST_DURATION);
+
                     TickType_t end_ticks = xTaskGetTickCount();
                     configRUN_TIME_COUNTER_TYPE end_count = portGET_RUN_TIME_COUNTER_VALUE();
                     configRUN_TIME_COUNTER_TYPE primary = ulTaskGetRunTimeCounter(primaryTask);
