@@ -19,12 +19,11 @@ void tearDown(void) {}
 
 
 void priority_inversion(void *args){
+    printf("\n priority inversion %s\n",(char*)args);
     while(1){
         xSemaphoreTake(semaphore, portMAX_DELAY);
-        printf("\n semaphore taken by %s\n",(char*)args);
         busy_wait_us(100000);
         xSemaphoreGive(semaphore);
-        printf("\n semaphore given by %s\n",(char*)args);
     }
 }
 
@@ -33,7 +32,7 @@ void test_inversion_binary()
 semaphore  = xSemaphoreCreateBinary();
 xSemaphoreGive(semaphore);
 
-run_analyzer(priority_inversion,tskIDLE_PRIORITY +(3),0,&first_stats,priority_inversion,tskIDLE_PRIORITY+(4),1,&second_stats,&elapsed_stats,&elapsed_ticks);
+    run_analyzer(priority_inversion, tskIDLE_PRIORITY+(3), 0, &first_stats,priority_inversion, tskIDLE_PRIORITY+(4), 1, &second_stats, &elapsed_stats, &elapsed_ticks);
     printf("\n First Stats %d",first_stats);
     printf("\n second Stats %d\n",second_stats);
     TEST_ASSERT(1000 > first_stats);
@@ -45,7 +44,7 @@ vSemaphoreDelete(semaphore);
 void test_inversion_mutex()
 {
 semaphore  = xSemaphoreCreateMutex();
-//xSemaphoreGive(semaphore);
+xSemaphoreGive(semaphore);
 
 run_analyzer(priority_inversion,tskIDLE_PRIORITY +(3),0,&first_stats,priority_inversion,tskIDLE_PRIORITY+(4),1,&second_stats,&elapsed_stats,&elapsed_ticks);
     printf("\n First Stats %d",first_stats);
@@ -61,7 +60,7 @@ void main_thread (void *args)
 {
     while (1) {
         UNITY_BEGIN();
-       // RUN_TEST(test_inversion_binary);
+        RUN_TEST(test_inversion_binary);
         RUN_TEST(test_inversion_mutex);
         UNITY_END();
         vTaskDelay(5000);
