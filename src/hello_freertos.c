@@ -2,7 +2,6 @@
  * Copyright (c) 2022 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
- * 
  */
 
 #include <stdio.h>
@@ -17,17 +16,29 @@
 int count = 0;
 bool on = false;
 
-#define HIGH_PRIORITY_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
-#define LOW_PRIORITY_PRIORITY     ( tskIDLE_PRIORITY + 2UL )
-#define HIGH_PRIORITY_STACK_SIZE configMINIMAL_STACK_SIZE
-#define LOW_PRIORITY_STACK_SIZE configMINIMAL_STACK_SIZE
+#define MAIN_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
+#define BLINK_TASK_PRIORITY     ( tskIDLE_PRIORITY + 2UL )
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define BLINK_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
-void low_priority(__unused void *params) {
-
+void blink_task(__unused void *params) {
+    hard_assert(cyw43_arch_init() == PICO_OK);
+    while (true) {
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on);
+        if (count++ % 11) on = !on;
+        vTaskDelay(500);
+    }
 }
 
-void high_priority(__unused void *params) {
-
+void main_task(__unused void *params) {
+    xTaskCreate(blink_task, "BlinkThread",
+                BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
+    char c;
+    while(c = getchar()) {
+        if (c <= 'z' && c >= 'a') putchar(c - 32);
+        else if (c >= 'A' && c <= 'Z') putchar(c + 32);
+        else putchar(c);
+    }
 }
 
 int main( void )
@@ -36,12 +47,8 @@ int main( void )
     const char *rtos_name;
     rtos_name = "FreeRTOS";
     TaskHandle_t task;
-    xTaskCreate(high_priority, "highPriorityThread",
-                HIGH_PRIORITY_STACK_SIZE, NULL, HIGH_PRIORITY_PRIORITY, &task);
-                
-    TaskHandle_t task1;
-    xTaskCreate(high_priority, "lowPriorityThread",
-                LOW_PRIORITY_STACK_SIZE, NULL, LOW_PRIORITY_PRIORITY, &task1);
+    xTaskCreate(main_task, "MainThread",
+                MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, &task);
     vTaskStartScheduler();
     return 0;
 }
