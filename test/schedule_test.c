@@ -67,13 +67,57 @@ semaphore  = xSemaphoreCreateMutex();
 vSemaphoreDelete(semaphore);
 }
 
+void busy_busy(void *args)
+{
+    for (int i = 0; ; i++);
+}
+
+void busy_yield(void *args)
+{
+    for (int i = 0; ; i++) {
+        taskYIELD();
+    }
+}
+
+void test_samePriority_Busy_Busy(){
+run_analyzer_2(busy_busy,tskIDLE_PRIORITY+(1),0,&first_stats,busy_busy,tskIDLE_PRIORITY+(1),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //should both be similar and take up about half the time
+    TEST_ASSERT(2000000 < first_stats);
+    TEST_ASSERT(2000000 < second_stats);
+}
+
+void test_samePriority_Yield_Yield(){
+    run_analyzer_2(busy_yield,tskIDLE_PRIORITY+(1),0,&first_stats,busy_yield,tskIDLE_PRIORITY+(1),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //should both be similar and take up about half the time
+    TEST_ASSERT(2000000 < first_stats);
+    TEST_ASSERT(2000000 < second_stats);
+}
+
+void test_samePriority_Busy_Yield(){
+    run_analyzer_2(busy_busy,tskIDLE_PRIORITY+(1),0,&first_stats,busy_yield,tskIDLE_PRIORITY+(1),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //the yield one whould have less time
+    TEST_ASSERT(4000000 < first_stats);
+    TEST_ASSERT(4000000 > second_stats);
+}
 
 void main_thread (void *args)
 {
     while (1) {
         UNITY_BEGIN();
-        //RUN_TEST(test_inversion_binary);
-        RUN_TEST(test_inversion_mutex);
+        // RUN_TEST(test_inversion_binary);
+        // RUN_TEST(test_inversion_mutex);
+        //RUN_TEST(test_samePriority_Busy_Busy);
+        //RUN_TEST(test_samePriority_Yield_Yield);
+        RUN_TEST(test_samePriority_Busy_Yield);
         UNITY_END();
         vTaskDelay(10000);
     }
