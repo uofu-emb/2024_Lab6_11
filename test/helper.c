@@ -64,5 +64,6 @@ void run_analyzer(TaskFunction_t pri_thread_entry,
 
                     vTaskDelete(primaryTask);
                     vTaskDelete(secondaryTask);
+                    vTaskDelete(thirdTask);
 
                   }
