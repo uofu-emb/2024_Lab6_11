@@ -109,15 +109,49 @@ void test_samePriority_Busy_Yield(){
     TEST_ASSERT(4000000 > second_stats);
 }
 
+void test_high_first_Busy_Busy(){
+run_analyzer_2(busy_busy,tskIDLE_PRIORITY+(2),0,&first_stats,busy_busy,tskIDLE_PRIORITY+(1),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //first one should take all the time
+     TEST_ASSERT(4000000 < first_stats);
+     TEST_ASSERT(0 == second_stats);
+}
+
+void test_low_first_Busy_Busy(){
+    run_analyzer_2(busy_busy,tskIDLE_PRIORITY+(1),0,&first_stats,busy_busy,tskIDLE_PRIORITY+(2),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //second one should take all the time
+    TEST_ASSERT(4000000 < second_stats);
+    TEST_ASSERT(0 == first_stats);
+}
+
+void test_difPriority_Yield_Yield(){
+    run_analyzer_2(busy_yield,tskIDLE_PRIORITY+(1),0,&first_stats,busy_yield,tskIDLE_PRIORITY+(2),0,&second_stats,&elapsed_stats,&elapsed_ticks);
+    printf("\n First Stats %llu",first_stats);
+    printf("\n second Stats %llu",second_stats);
+    printf("\n runtime %llu\n",elapsed_stats);
+    //second one should take all the time
+    TEST_ASSERT(4000000 < second_stats);
+    TEST_ASSERT(0 == first_stats);
+}
+
+
 void main_thread (void *args)
 {
     while (1) {
         UNITY_BEGIN();
-        // RUN_TEST(test_inversion_binary);
-        // RUN_TEST(test_inversion_mutex);
-        //RUN_TEST(test_samePriority_Busy_Busy);
-        //RUN_TEST(test_samePriority_Yield_Yield);
+        RUN_TEST(test_inversion_binary);
+        RUN_TEST(test_inversion_mutex);
+        RUN_TEST(test_samePriority_Busy_Busy);
+        RUN_TEST(test_samePriority_Yield_Yield);
         RUN_TEST(test_samePriority_Busy_Yield);
+        RUN_TEST(test_high_first_Busy_Busy);
+        RUN_TEST(test_low_first_Busy_Busy);
+        RUN_TEST(test_difPriority_Yield_Yield);
         UNITY_END();
         vTaskDelay(10000);
     }
